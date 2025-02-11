@@ -14,9 +14,11 @@ function App() {
           type="text"
           name="text"
           className="input"
-        ></input>
+        />
         <Link to="/jeu">
-          <button className="button-inscription">Start</button>
+          <button type="button" className="button-inscription">
+            Start
+          </button>
         </Link>
       </section>
     </>

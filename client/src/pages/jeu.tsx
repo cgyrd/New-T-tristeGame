@@ -153,13 +153,21 @@ function Jeu() {
 
   return (
     <>
-      <section className="règles">
-        <p>
-          Pour gagner, il te faut juste être plus malin que les pièces.
-          Attention aux pièges !
-        </p>
+      <section className="jeu-et-point">
+        <section className="profil-joueur">
+          <section className="règles">
+            <p>
+              Pour gagner, il te faut juste être plus malin que les pièces.
+              Attention aux pièges !
+            </p>
+          </section>
+          <section className="user">
+            <p> User</p>
+            <p> Score</p>
+          </section>
+        </section>
+        <section className="grille-jeu">{afficherGrille()}</section>
       </section>
-      <section className="grille-jeu">{afficherGrille()}</section>
     </>
   );
 }
