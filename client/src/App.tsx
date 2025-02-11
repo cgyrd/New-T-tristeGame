@@ -1,5 +1,5 @@
 import "./App.css";
-import Jeux from "./components/plateau";
+import { Link } from "react-router-dom";
 
 function App() {
   return (
@@ -8,8 +8,16 @@ function App() {
         <h1> Té-triste ou té-joyeux? </h1>
         <p> Tout dépendra de ton score</p>
       </section>
-      <section className="plateau-jeu">
-        <Jeux />
+      <section className="inscris-toi">
+        <input
+          placeholder="Your Username"
+          type="text"
+          name="text"
+          className="input"
+        ></input>
+        <Link to="/jeu">
+          <button className="button-inscription">Start</button>
+        </Link>
       </section>
     </>
   );
