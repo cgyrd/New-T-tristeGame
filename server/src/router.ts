@@ -6,13 +6,16 @@ const router = express.Router();
 // Define Your API Routes Here
 /* ************************************************************************* */
 
-// Define item-related routes
-import itemActions from "./modules/item/itemActions";
-
-router.get("/api/items", itemActions.browse);
-router.get("/api/items/:id", itemActions.read);
-router.post("/api/items", itemActions.add);
 
 /* ************************************************************************* */
+
+// I connect my userActions, et userReposotiry 
+
+import userActions from "./modules/userActions";
+
+router.post("/api/user", userActions.addUser);
+router.get("/api/user/:id", userActions.getUSer);
+
+
 
 export default router;
