@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "./jeu.css";
+import { useUser } from "../Context/UserContext";
 
 function Jeu() {
   const largeur = 10;
   const hauteur = 20;
+    const { user } = useUser();
+
 
   // Définition des formes des pièces sous forme de matrice
   const formes: Formes = {
@@ -22,53 +25,49 @@ function Jeu() {
   const creerGrilleVide = () =>
     Array.from({ length: hauteur }, () => Array(largeur).fill(0)); // zéro pour les cases vides
 
-  // Etat de la grille et de la pièce
+  // États du jeu
   const [grille, setGrille] = useState(creerGrilleVide);
-  const [piece, setPiece] = useState({
-    x: 4,
-    y: 0,
-    forme: "I", // première pièce sera donc la forme I
-  });
+  const [piece, setPiece] = useState(nouvellePiece);
+  const [score, setScore] = useState(0); // Stockage du score
 
   // Fonction pour générer une nouvelle pièce aléatoire
-  const nouvellePiece = () => {
-    const nomsFormes = Object.keys(formes); // l'objet qui regroupe toutes les différentes formes de pièces
+  function nouvellePiece() {
+    const nomsFormes = Object.keys(formes);
     return {
       x: 4,
       y: 0,
       forme: nomsFormes[Math.floor(Math.random() * nomsFormes.length)], // choisir aléatoirement parmi les différentes formes
     };
-  };
+  }
 
   // Fonction pour obtenir la forme actuelle de la pièce :: plus simple pr réutilisation
   const getPieceForme = () => formes[piece.forme];
 
   // Vérifier si la pièce peut bouger à la nouvelle position
   const peutBouger = (x: number, y: number, forme: number[][]): boolean => {
-    return forme.every((ligne: number[], dy: number) =>
+    return forme.every((ligne, dy) =>
       ligne.every(
-        (val: number, dx: number) =>
+        (val, dx) =>
           !val ||
-          (y + dy < hauteur && // jz vérifie que la case ne dépasse pas le bas de la grille
+          (y + dy < hauteur && // vérifie que la case ne dépasse pas le bas de la grille
             x + dx >= 0 &&
-            x + dx < largeur && // je vérifie que case ne dépasse pas à gauche et à droite
-            grille[y + dy]?.[x + dx] === 0) // est ce que la case est bien libre, et donc égale à zéro ?
+            x + dx < largeur && // vérifie que la case ne dépasse pas à gauche et à droite
+            grille[y + dy]?.[x + dx] === 0) // est-ce que la case est bien libre, et donc égale à zéro ?
       )
     );
   };
 
   // Type pour décrire la structure des formes (chaînes de caractères et matrices)
   type Formes = {
-    [key: string]: number[][]; // toutes les clés de l'objet sont une chaîne de caractère et la valeur est une matrice de nombre
+    [key: string]: number[][]; // toutes les clés de l'objet sont une chaîne et la valeur est une matrice de nombres
   };
 
   // Fonction pour fixer la pièce dans la grille
   const fixerPieceDansGrille = (): number[][] => {
-    const nouvelleGrille: number[][] = grille.map((row: number[]) => [...row]); // c'est une copie de la grille, map pour parcourir chaque row, et créer une copie pour ne pas modifier la ligne originale
+    const nouvelleGrille = grille.map((row) => [...row]); // c'est une copie de la grille, map pour parcourir chaque row, et créer une copie pour ne pas modifier la ligne originale
 
-    getPieceForme().forEach((ligne: number[], dy: number) => {
-      // parcourir chaque case de la ligne
-      ligne.forEach((val: number, dx: number) => {
+    getPieceForme().forEach((ligne, dy) => {
+      ligne.forEach((val, dx) => {
         if (val) nouvelleGrille[piece.y + dy][piece.x + dx] = 1; // placement de la pièce dans la case si val = 1 à la nouvelle position
       });
     });
@@ -76,34 +75,42 @@ function Jeu() {
     return nouvelleGrille;
   };
 
-  // Fonction pour supprimer les lignes complètes
+  // Fonction pour supprimer les lignes complètes et mettre à jour le score
   const supprimerLignesCompletes = (grille: number[][]): number[][] => {
-    const nouvellesLignes: number[][] = grille.filter(
-      (row: number[]) => row.includes(0) // parcourir les rows et stocker que celles contenant des espaces vides (0)
-    );
+    const nouvellesLignes = grille.filter((row) => row.includes(0));
+
+    const lignesSupprimees = hauteur - nouvellesLignes.length; // Calcul des lignes supprimées
+    if (lignesSupprimees > 0) {
+      setScore((prevScore) => prevScore + lignesSupprimees * 10); // +10 points par ligne
+    }
+
     while (nouvellesLignes.length < hauteur) {
       // tant que le nombre de lignes < hauteur de grille, on ajoute des lignes vides
-      nouvellesLignes.unshift(Array(largeur).fill(0)); // ajout d'une ligne vide (remplie de 0)
+      nouvellesLignes.unshift(Array(largeur).fill(0)); // ajout de lignes vides en haut
     }
+
     return nouvellesLignes;
   };
 
   // Fonction pour déplacer la pièce
-  const deplacerPiece = (dx: number, dy: number) => {
-    const newX = piece.x + dx; // calcule la nouvelle position horizontale après déplacement
-    const newY = piece.y + dy; // idem pour la position verticale
-    const forme = getPieceForme(); // récupère la forme de la pièce
+  const deplacerPiece = useCallback(
+    (dx: number, dy: number) => {
+      const newX = piece.x + dx; // calcule la nouvelle position horizontale après déplacement
+      const newY = piece.y + dy; // idem pour la position verticale
+      const forme = getPieceForme(); // récupère la forme de la pièce
 
-    if (peutBouger(newX, newY, forme)) {
-      // vérifier si la place est libre et si la pièce peut être déplacée
-      setPiece({ ...piece, x: newX, y: newY }); // mise à jour de la pièce avec la nouvelle position
-    } else if (dy === 1) {
-      // si la pièce ne peut pas bouger vers le bas (dy = 1)
-      const grilleFixee = fixerPieceDansGrille(); // fixer la pièce dans la grille
-      setGrille(supprimerLignesCompletes(grilleFixee)); // mettre à jour la grille en supprimant les lignes complètes
-      setPiece(nouvellePiece()); // générer une nouvelle pièce
-    }
-  };
+      if (peutBouger(newX, newY, forme)) {
+        // vérifier si la place est libre et si la pièce peut être déplacée
+        setPiece((prev) => ({ ...prev, x: newX, y: newY }));
+      } else if (dy === 1) {
+        // Si la pièce ne peut plus descendre
+        const grilleFixee = fixerPieceDansGrille(); // mise à jour de la pièce avec la nouvelle position
+        setGrille(supprimerLignesCompletes(grilleFixee)); // mettre à jour la grille en supprimant les lignes complètes
+        setPiece(nouvellePiece()); // générer une nouvelle pièce
+      }
+    },
+    [piece, grille]
+  );
 
   // Gestion des événements de clavier pour déplacer la pièce
   useEffect(() => {
@@ -122,13 +129,13 @@ function Jeu() {
 
     window.addEventListener("keydown", handleKeyDown); // écoute les événements de touche enfoncée
     return () => window.removeEventListener("keydown", handleKeyDown); // nettoyage de l'écouteur lors du démontage du composant
-  }, [piece]);
+  }, [deplacerPiece]);
 
   // Automatiser le déplacement de la pièce vers le bas toutes les 600ms
   useEffect(() => {
     const interval = setInterval(() => deplacerPiece(0, 1), 600); // déplace la pièce vers le bas toutes les 600ms
     return () => clearInterval(interval); // nettoyage de l'intervalle lors du démontage du composant
-  }, [piece]);
+  }, [deplacerPiece]);
 
   // Fonction pour afficher la grille
   const afficherGrille = () => {
@@ -153,6 +160,7 @@ function Jeu() {
 
   return (
     <>
+      <div className="background"></div>
       <section className="jeu-et-point">
         <section className="profil-joueur">
           <section className="règles">
@@ -162,8 +170,8 @@ function Jeu() {
             </p>
           </section>
           <section className="user">
-            <p> User</p>
-            <p> Score</p>
+            <p>User: {user?.name || "Anonyme"}</p>
+            <p>Score : {score}</p>
           </section>
         </section>
         <section className="grille-jeu">{afficherGrille()}</section>
