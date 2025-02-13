@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback  } from "react";
+import { useNavigate } from "react-router-dom";
 import "./jeu.css";
 import { useUser } from "../Context/UserContext";
+import "./jeu-deux"
 
 function Jeu() {
   const largeur = 10;
@@ -8,6 +10,7 @@ function Jeu() {
   const { user } = useUser();
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const navigate= useNavigate();
 
   // Définition des formes des pièces sous forme de matrice
   const formes: Formes = {
@@ -192,6 +195,11 @@ function Jeu() {
     setGameWon(false);
   };
 
+    const handleStart = () => {
+      // Naviguer vers l'étape 2
+      navigate("/jeu-deux");
+    };
+
   return (
     <>
       <div className="background"></div>
@@ -209,7 +217,9 @@ function Jeu() {
           </section>
           {gameOver ? (
             gameWon ? (
-              <div className="win-button">Continue, c'était trop facile</div> // Message de victoire
+              <button className="win-button" onClick={handleStart}>
+                C'était trop simple, continue !
+              </button>
             ) : (
               <button className="start-over" onClick={startOver}>
                 Rejouer

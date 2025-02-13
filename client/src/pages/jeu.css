@@ -72,13 +72,14 @@ color: #1f0e35;
   background-color: white;
   border: 2px solid white;
   font-family: "Silkscreen", serif;
-  font-size: 18px;
+  font-size: 20px;
   color: #18122b;
   padding: 30px;
   box-shadow: inset 4px 4px 4px #cbced1, inset -4px -4px 4px #ffffff;
   text-align: center;
   cursor: pointer;
-  margin: 50px;
+  margin: 60px;
+  padding: 10px;
 }
 
 
