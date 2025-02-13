@@ -5,8 +5,9 @@ import { useUser } from "../Context/UserContext";
 function Jeu() {
   const largeur = 10;
   const hauteur = 20;
-    const { user } = useUser();
-
+  const { user } = useUser();
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
 
   // Définition des formes des pièces sous forme de matrice
   const formes: Formes = {
@@ -18,6 +19,18 @@ function Jeu() {
     L: [
       [0, 1, 0], // T à l'envers
       [1, 1, 1],
+    ],
+    Z: [
+      [1, 1, 0], // forme Z
+      [0, 1, 1],
+    ],
+    i: [
+      [1], // forme petit i
+      [1],
+    ],
+    S: [
+      [0, 1, 1],
+      [1, 1, 0], // forme  Z à lenvers
     ],
   };
 
@@ -78,10 +91,16 @@ function Jeu() {
   // Fonction pour supprimer les lignes complètes et mettre à jour le score
   const supprimerLignesCompletes = (grille: number[][]): number[][] => {
     const nouvellesLignes = grille.filter((row) => row.includes(0));
-
     const lignesSupprimees = hauteur - nouvellesLignes.length; // Calcul des lignes supprimées
     if (lignesSupprimees > 0) {
-      setScore((prevScore) => prevScore + lignesSupprimees * 10); // +10 points par ligne
+      setScore((prevScore) => {
+        const newScore = prevScore + lignesSupprimees * 10; // +10 points par ligne
+        if (newScore >= 20) {
+          setGameOver(true); // Si le score atteint 20, on arrête le jeu
+          setGameWon(true); // on arrête le jeu car victoire
+        }
+        return newScore;
+      });
     }
 
     while (nouvellesLignes.length < hauteur) {
@@ -106,12 +125,17 @@ function Jeu() {
         // Si la pièce ne peut plus descendre
         const grilleFixee = fixerPieceDansGrille(); // mise à jour de la pièce avec la nouvelle position
         setGrille(supprimerLignesCompletes(grilleFixee)); // mettre à jour la grille en supprimant les lignes complètes
-        setPiece(nouvellePiece()); // générer une nouvelle pièce
+        const nouvelle = nouvellePiece();
+        if (!peutBouger(nouvelle.x, nouvelle.y, formes[nouvelle.forme])) {
+          setGameOver(true); // si les poèces ne peuvent plus être insérées, game oveer
+          return;
+        }
+
+        setPiece(nouvelle);
       }
     },
-    [piece, grille]
+    [piece, grille, gameOver]
   );
-
   // Gestion des événements de clavier pour déplacer la pièce
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -133,6 +157,7 @@ function Jeu() {
 
   // Automatiser le déplacement de la pièce vers le bas toutes les 600ms
   useEffect(() => {
+    if (gameOver) return;
     const interval = setInterval(() => deplacerPiece(0, 1), 600); // déplace la pièce vers le bas toutes les 600ms
     return () => clearInterval(interval); // nettoyage de l'intervalle lors du démontage du composant
   }, [deplacerPiece]);
@@ -158,6 +183,15 @@ function Jeu() {
     ));
   };
 
+  // proposer de rejouer quand "tu as perduuu"
+  const startOver = () => {
+    setGrille(creerGrilleVide());
+    setPiece(nouvellePiece());
+    setScore(0);
+    setGameOver(false);
+    setGameWon(false);
+  };
+
   return (
     <>
       <div className="background"></div>
@@ -173,11 +207,19 @@ function Jeu() {
             <p>User: {user?.name || "Anonyme"}</p>
             <p>Score : {score}</p>
           </section>
+          {gameOver ? (
+            gameWon ? (
+              <div className="win-button">Continue, c'était trop facile</div> // Message de victoire
+            ) : (
+              <button className="start-over" onClick={startOver}>
+                Rejouer
+              </button>
+            )
+          ) : null}
         </section>
         <section className="grille-jeu">{afficherGrille()}</section>
       </section>
     </>
   );
 }
-
 export default Jeu;
