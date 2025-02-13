@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback  } from "react";
 import { useNavigate } from "react-router-dom";
 import "./jeu.css";
 import { useUser } from "../Context/UserContext";
-import "./jeu-deux"
 
 function Jeu() {
   const largeur = 10;

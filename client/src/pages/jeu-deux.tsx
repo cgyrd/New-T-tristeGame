@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import "./jeu-deux.css";
 import { useUser } from "../Context/UserContext";
 
@@ -10,7 +9,7 @@ function SecondJeu() {
   const { user } = useUser();
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const navigate = useNavigate();
+
 
   // Définition des formes des pièces sous forme de matrice
   const formes: Formes = {
@@ -25,8 +24,7 @@ function SecondJeu() {
       [1, 1],
     ],
     l: [
-    
-      [1, 0],   // forme petit l
+      [1, 0], // forme petit l
       [1, 1],
     ],
     Z: [
@@ -104,7 +102,7 @@ function SecondJeu() {
     if (lignesSupprimees > 0) {
       setScore((prevScore) => {
         const newScore = prevScore + lignesSupprimees * 10; // +10 points par ligne
-        if (newScore >= 20) {
+        if (newScore >= 40) {
           setGameOver(true); // Si le score atteint 20, on arrête le jeu
           setGameWon(true); // on arrête le jeu car victoire
         }
@@ -201,10 +199,7 @@ function SecondJeu() {
     setGameWon(false);
   };
 
-  const handleStart = () => {
-    // Naviguer vers l'étape 2
-    navigate("/jeu-deux");
-  };
+
 
   return (
     <>
@@ -223,9 +218,8 @@ function SecondJeu() {
           </section>
           {gameOver ? (
             gameWon ? (
-              <button className="win-button" onClick={handleStart}>
-                C'était trop simple, continue !
-              </button>
+              <div className="win-message">Bravo ! Tout ça pour rien car il n'y a pas de niveau 3! 
+              <br /> à bientôt ! </div> 
             ) : (
               <button className="start-over" onClick={startOver}>
                 Rejouer
